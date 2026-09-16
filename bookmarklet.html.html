@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Arma Mod Manager — Bookmarklet Installer</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Share+Tech+Mono&display=swap');
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0a0c0f;--surf:#111418;--surf2:#181c22;--surf3:#1e242d;
+  --b:#2a3040;--b2:#3a4558;
+  --grn:#39ff7a;--grn2:#22b856;--grn3:#0d4a24;
+  --amb:#f5a623;--amb2:#c47d0e;--amb3:#4a2e05;
+  --blu:#4a9eff;--blu2:#1a6fd4;--blu3:#0a2550;
+  --txt:#e8ecf0;--txt2:#8a9ab0;--txt3:#4a5668;
+  --f:'Rajdhani',sans-serif;--m:'Share Tech Mono',monospace;
+}
+body{background:var(--bg);color:var(--txt);font-family:var(--f);font-size:15px;min-height:100vh;padding:2rem 1rem}
+.app{max-width:700px;margin:0 auto}
+.hdr{display:flex;align-items:center;gap:14px;margin-bottom:2rem;padding-bottom:1rem;border-bottom:1px solid var(--b)}
+.logo{width:44px;height:44px;background:var(--grn3);border:1px solid var(--grn2);border-radius:6px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.logo svg{width:26px;height:26px;stroke:var(--grn);fill:none;stroke-width:2}
+.htitle{font-size:20px;font-weight:700;letter-spacing:2px;text-transform:uppercase}
+.hsub{font-size:11px;color:var(--txt2);letter-spacing:1px;text-transform:uppercase;margin-top:2px}
+.card{background:var(--surf);border:1px solid var(--b);border-radius:8px;padding:1.5rem;margin-bottom:1rem}
+.step{display:flex;gap:16px;margin-bottom:1.25rem;align-items:flex-start}
+.step:last-child{margin-bottom:0}
+.step-num{background:var(--grn3);color:var(--grn);border:1px solid var(--grn2);border-radius:6px;font-size:13px;font-weight:700;font-family:var(--m);padding:4px 10px;flex-shrink:0;margin-top:2px}
+.step-body{flex:1}
+.step-title{font-size:14px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--txt);margin-bottom:4px}
+.step-text{font-size:13px;color:var(--txt2);line-height:1.7}
+.step-text code{background:var(--surf3);color:var(--amb);font-family:var(--m);padding:1px 6px;border-radius:3px;font-size:12px}
+
+.bookmarklet-btn{
+  display:inline-block;
+  background:var(--grn2);
+  color:#000;
+  font-family:var(--f);
+  font-size:14px;
+  font-weight:700;
+  letter-spacing:1px;
+  text-transform:uppercase;
+  padding:12px 24px;
+  border-radius:8px;
+  border:2px solid var(--grn);
+  text-decoration:none;
+  cursor:grab;
+  margin:12px 0;
+  transition:all .15s;
+  user-select:none;
+}
+.bookmarklet-btn:hover{background:var(--grn);transform:translateY(-1px)}
+.drag-hint{font-size:11px;font-family:var(--m);color:var(--txt2);margin-top:6px;display:flex;align-items:center;gap:6px}
+.arrow{font-size:18px;color:var(--grn)}
+
+.url-input-box{margin-top:1rem;background:var(--surf2);border:1px solid var(--b2);border-radius:8px;padding:1rem}
+.url-input-box label{font-size:11px;letter-spacing:1px;text-transform:uppercase;color:var(--txt2);display:block;margin-bottom:6px;font-weight:600}
+.url-input-box input{background:var(--surf3);border:1px solid var(--b);color:var(--txt);font-family:var(--m);font-size:12px;padding:8px 12px;border-radius:6px;width:100%;outline:none}
+.url-input-box input:focus{border-color:var(--grn2)}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:6px;font-family:var(--f);font-size:12px;font-weight:600;letter-spacing:1px;text-transform:uppercase;cursor:pointer;border:none;transition:all .15s;margin-top:8px}
+.btn-grn{background:var(--grn2);color:#fff}.btn-grn:hover{background:var(--grn);color:#000}
+
+.how-it-works{background:var(--surf2);border:1px solid var(--b);border-radius:8px;padding:1rem;margin-top:1rem;font-size:12px;font-family:var(--m);color:var(--txt2);line-height:1.9}
+.how-it-works .title{color:var(--grn);font-weight:700;font-size:11px;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:8px}
+
+.badge{display:inline-block;background:var(--amb3);color:var(--amb);border:1px solid var(--amb2);font-size:10px;font-family:var(--m);padding:2px 8px;border-radius:3px;letter-spacing:1px;text-transform:uppercase;margin-bottom:12px}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="hdr">
+    <div class="logo"><svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg></div>
+    <div>
+      <div class="htitle">Mod Manager Bookmarklet</div>
+      <div class="hsub">Scrape Workshop pages while logged in — no proxy needed</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="badge">One-time setup</div>
+
+    <div class="step">
+      <div class="step-num">1</div>
+      <div class="step-body">
+        <div class="step-title">Enter your Mod Manager URL</div>
+        <div class="step-text">Paste your GitHub Pages URL below so the bookmarklet knows where to send the data.</div>
+        <div class="url-input-box">
+          <label>Your GitHub Pages URL</label>
+          <input type="text" id="app-url" placeholder="https://yourusername.github.io/arma-mod-manager" oninput="updateBookmarklet()"/>
+          <button class="btn btn-grn" onclick="updateBookmarklet()">Update Bookmarklet</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-num">2</div>
+      <div class="step-body">
+        <div class="step-title">Make sure your bookmarks bar is visible</div>
+        <div class="step-text">In Chrome or Edge press <code>Ctrl+Shift+B</code> to show the bookmarks bar if it's hidden.</div>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-num">3</div>
+      <div class="step-body">
+        <div class="step-title">Drag this button to your bookmarks bar</div>
+        <div class="step-text">Click and drag the button below up to your bookmarks bar and release it there.</div>
+        <div style="margin-top:10px">
+          <a id="bookmarklet-link" href="#" class="bookmarklet-btn" title="Drag me to your bookmarks bar">&#128203; Send to Mod Manager</a>
+        </div>
+        <div class="drag-hint"><span class="arrow">&#8593;</span> Drag this button up to your bookmarks bar</div>
+        <div id="url-warning" style="margin-top:8px;font-size:11px;font-family:var(--m);color:var(--amb);display:none">⚠ Enter your GitHub Pages URL above first, then drag the button</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="badge">Daily use</div>
+    <div class="step">
+      <div class="step-num">1</div>
+      <div class="step-body">
+        <div class="step-title">Go to a Workshop mod page</div>
+        <div class="step-text">Browse to <code>reforger.armaplatform.com/workshop</code>, click through the age verification, and open any mod page.</div>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">2</div>
+      <div class="step-body">
+        <div class="step-title">Click the bookmarklet</div>
+        <div class="step-text">Click <code>Send to Mod Manager</code> in your bookmarks bar. It reads the page you're already on.</div>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">3</div>
+      <div class="step-body">
+        <div class="step-title">Your Mod Manager opens with data pre-filled</div>
+        <div class="step-text">A new tab opens with the Mod Manager already populated with the mod name, ID, version, size, developer, and dependencies. Just fill in the test details and save.</div>
+      </div>
+    </div>
+
+    <div class="how-it-works">
+      <div class="title">How it works</div>
+      <div>The bookmarklet runs as JavaScript on the Workshop page itself — no proxy, no CORS issues, no age gate problems. Since you're already logged in and on the page, it can read everything directly. It packages the data into a URL and opens your Mod Manager with the fields pre-populated.</div>
+    </div>
+  </div>
+</div>
+
+<script>
+// The actual bookmarklet code — minified
+function buildBookmarklet(appUrl) {
+  const code = `(function(){
+    var url=location.href;
+    var id=(url.match(/([A-F0-9]{16})/i)||[])[1]||'';
+    function g(s){var e=document.querySelector(s);return e?e.textContent.trim():'';}
+    function m(p){var e=document.querySelector('meta[property="'+p+'"]')||document.querySelector('meta[name="'+p+'"]');return e?e.getAttribute('content'):'';}
+    var name=g('h1')||g('.mod-title')||m('og:title')||'';
+    name=name.replace(/\\s*-\\s*Arma.*$/i,'').replace(/\\s*\\|.*/,'').trim();
+    var allText=document.body?document.body.innerText||document.body.textContent:'';
+    var ver=((allText.match(/[Vv]ersion[:\\s]+([0-9]+\\.[0-9]+\\.?[0-9]*)/)||[])[1]||'');
+    var size=((allText.match(/([0-9]+(?:\\.[0-9]+)?\\s*(?:MB|GB|KB))/i)||[])[1]||'');
+    var dev='';
+    var devEl=document.querySelector('[class*="author"],[class*="creator"],[class*="owner"]');
+    if(devEl)dev=devEl.textContent.trim();
+    if(!dev){var dm=allText.match(/(?:Author|Developer|Created by|By)[:\\s]+([^\\n,]{3,40})/i);if(dm)dev=dm[1].trim();}
+    var lastmod='';
+    var te=document.querySelector('time');
+    if(te)lastmod=te.getAttribute('datetime')||te.textContent.trim();
+    var subs='';
+    var sm=allText.match(/([0-9,]+)\\s*(?:subscriber|download|follower)/i);
+    if(sm)subs=sm[1];
+    var desc='';
+    var de=document.querySelector('[class*="description"],[class*="desc"]');
+    if(de)desc=de.textContent.trim().slice(0,300);
+    else desc=m('og:description').slice(0,300);
+    var deps=[];
+    var ds=allText.match(/[Dd]ependenc(?:y|ies)[:\\s\\n]+([^\\n]{10,2000})/);
+    if(ds)deps=ds[1].split(/[,\\n]+/).map(function(d){return d.trim();}).filter(function(d){return d.length>2&&d.length<60;});
+    document.querySelectorAll('a[href*="workshop"]').forEach(function(a){var t=a.textContent.trim();if(t.length>2&&t.length<60&&deps.indexOf(t)<0)deps.push(t);});
+    deps=deps.filter(function(d){return d&&d!==name;}).slice(0,80);
+    var data={name:name,modid:id.toUpperCase(),url:url,ver:ver,size:size,dev:dev,lastmod:lastmod,subscribers:subs,description:desc,deps:deps.join(', ')};
+    var encoded=encodeURIComponent(JSON.stringify(data));
+    var target='${appUrl}';
+    if(!target||target.includes('yourusername')){alert('Update the bookmarklet with your Mod Manager URL first.');return;}
+    window.open(target+'?moddata='+encoded,'_blank');
+    alert('Mod data sent! Check your Mod Manager tab.');
+  })();`;
+  return 'javascript:' + code.replace(/\n\s*/g, '');
+}
+
+function updateBookmarklet() {
+  var appUrl = document.getElementById('app-url').value.trim();
+  var link = document.getElementById('bookmarklet-link');
+  var warning = document.getElementById('url-warning');
+
+  if (!appUrl || appUrl.includes('yourusername')) {
+    link.href = '#';
+    warning.style.display = 'block';
+    link.onclick = function(e) { e.preventDefault(); warning.style.display='block'; };
+    return;
+  }
+
+  warning.style.display = 'none';
+  // Remove trailing slash
+  appUrl = appUrl.replace(/\/$/, '');
+  link.href = buildBookmarklet(appUrl);
+  link.onclick = null;
+}
+
+// Init
+updateBookmarklet();
+</script>
+</body>
+</html>

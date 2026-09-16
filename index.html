@@ -383,7 +383,7 @@ tr.overdue-warn td{background:rgba(245,166,35,.06)}
 // ============================================================
 // CONFIGURATION — paste your Google Apps Script Web App URL below
 // ============================================================
-const SHEETS_API_URL = 'https://script.google.com/macros/s/AKfycbzzR7HAKfBc-31aH-e65w4FxlozfFVRMcit8rH3cyUciJv9MaUjSXKh2-DICMz2nGIA/exec';
+const SHEETS_API_URL = 'PASTE_YOUR_GOOGLE_APPS_SCRIPT_URL_HERE';
 // ============================================================
 
 const SK='arma-test-v7';
@@ -759,9 +759,74 @@ function showTab(name){
 }
 function updateAll(){updateStats();renderDashboard();renderList();renderServers();renderReview();}
 
+
+// ── READ BOOKMARKLET DATA FROM URL ──
+function readBookmarkletData() {
+  const params = new URLSearchParams(window.location.search);
+  const raw = params.get('moddata');
+  if (!raw) return;
+  try {
+    const d = JSON.parse(decodeURIComponent(raw));
+    // Clean the URL without reloading
+    window.history.replaceState({}, document.title, window.location.pathname);
+    // Pre-fill scraped object
+    scraped = {
+      _id: uid(),
+      name: d.name || 'Unknown Mod',
+      modid: d.modid || '',
+      url: d.url || '',
+      ver: d.ver || '',
+      dev: d.dev || '',
+      size: d.size || '',
+      lastmod: d.lastmod || '',
+      subscribers: d.subscribers || '',
+      description: d.description || '',
+      deps: d.deps || '',
+      cat: '', result: 'Pending', rec: 'Pending', oic: 'Pending',
+      oicname: '', tester: '', testdate: '', env: '',
+      perf: '', fps: '', compat: '', issues: '', notes: '',
+      servers: [], added: new Date().toISOString().slice(0, 10)
+    };
+    // Show the scrape result panel
+    document.getElementById('scrape-url').value = d.url || '';
+    document.getElementById('f-testdate').value = new Date().toISOString().slice(0, 10);
+    touchField('fv-testdate', 'f-testdate');
+    document.getElementById('f-cat').value = ''; updateCatPreview();
+    document.getElementById('f-notes').value = ''; onNotesInput();
+    ['fv-tester','fv-testdate','fv-notes'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.classList.remove('touched','valid','invalid');
+    });
+    // Build preview
+    const fields = [
+      ['Mod Name', scraped.name, true],
+      ['Mod ID', scraped.modid, true],
+      ['Version', scraped.ver || '&#8212;', false],
+      ['Developer', scraped.dev || '&#8212;', false],
+      ['Size', scraped.size || '&#8212;', false],
+      ['Last Modified', scraped.lastmod || '&#8212;', false],
+      ['Subscribers', scraped.subscribers || '&#8212;', false],
+      ['Dependencies', scraped.deps ? scraped.deps.split(',').length + ' found' : '0', false],
+    ];
+    document.getElementById('scraped-preview').innerHTML =
+      '<div>' + fields.map(([k,v,g]) => `<div class="fp-row"><span class="fp-key">${k}</span><span class="fp-val${g?' good':''}">${v}</span></div>`).join('') + '</div>' +
+      (scraped.deps ? `<div style="margin-top:10px"><div style="font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--txt2);margin-bottom:5px">Dependencies</div><div>${scraped.deps.split(',').slice(0,15).map(d=>`<span class="dep-pill">${d.trim()}</span>`).join('')}${scraped.deps.split(',').length>15?`<span class="dep-pill">+${scraped.deps.split(',').length-15} more</span>`:''}</div></div>` : '');
+    document.getElementById('scrape-result').style.display = '';
+    setScrapeStatus('Loaded from Workshop bookmarklet', 'ok');
+    toast('Mod loaded: ' + scraped.name);
+    // Check for duplicate
+    if (scraped.modid) {
+      const ex = mods.find(m => m.modid && m.modid.toUpperCase() === scraped.modid.toUpperCase());
+      if (ex) showDupAlert(ex);
+    }
+  } catch(e) {
+    console.error('Bookmarklet data parse error:', e);
+  }
+}
+
 // Auto-refresh every 60s
 setInterval(loadFromSheets,60000);
-loadFromSheets();
+loadFromSheets().then(() => readBookmarkletData());
 </script>
 </body>
 </html>
