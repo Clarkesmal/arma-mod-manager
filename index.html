@@ -1,0 +1,767 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Arma Reforger // Mod Testing Pipeline</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Share+Tech+Mono&display=swap');
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0a0c0f;--surf:#111418;--surf2:#181c22;--surf3:#1e242d;
+  --b:#2a3040;--b2:#3a4558;
+  --grn:#39ff7a;--grn2:#22b856;--grn3:#0d4a24;
+  --amb:#f5a623;--amb2:#c47d0e;--amb3:#4a2e05;
+  --red:#ff4444;--red2:#cc2222;--red3:#4a0a0a;
+  --blu:#4a9eff;--blu2:#1a6fd4;--blu3:#0a2550;
+  --pur:#7f77dd;--pur2:#534ab7;--pur3:#26215c;
+  --tea2:#0f6e56;--tea3:#04342c;
+  --txt:#e8ecf0;--txt2:#8a9ab0;--txt3:#4a5668;
+  --f:'Rajdhani',sans-serif;--m:'Share Tech Mono',monospace;
+}
+body{background:var(--bg);color:var(--txt);font-family:var(--f);font-size:15px;min-height:100vh}
+.app{max-width:1400px;margin:0 auto;padding:1.25rem}
+.hdr{display:flex;align-items:center;gap:14px;margin-bottom:1.5rem;padding-bottom:1rem;border-bottom:1px solid var(--b);flex-wrap:wrap}
+.logo{width:44px;height:44px;background:var(--grn3);border:1px solid var(--grn2);border-radius:6px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.logo svg{width:26px;height:26px;stroke:var(--grn);fill:none;stroke-width:2}
+.htitle{font-size:20px;font-weight:700;letter-spacing:2px;text-transform:uppercase}
+.hsub{font-size:11px;color:var(--txt2);letter-spacing:1px;text-transform:uppercase;margin-top:2px}
+.hactions{margin-left:auto;display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.stats{display:grid;grid-template-columns:repeat(7,1fr);gap:10px;margin-bottom:1.25rem}
+@media(max-width:1000px){.stats{grid-template-columns:repeat(4,1fr)}}
+@media(max-width:600px){.stats{grid-template-columns:repeat(3,1fr)}}
+.stat{background:var(--surf2);border:1px solid var(--b);border-radius:8px;padding:.75rem;text-align:center}
+.snum{font-size:22px;font-weight:700;font-family:var(--m)}
+.slbl{font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--txt2);margin-top:3px}
+.tabs{display:flex;border-bottom:1px solid var(--b);margin-bottom:1.25rem;overflow-x:auto}
+.tab{padding:9px 16px;font-size:12px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--txt2);cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap;transition:all .15s}
+.tab.active{color:var(--grn);border-bottom-color:var(--grn)}
+.tab:hover:not(.active){color:var(--txt)}
+.tab-badge{display:inline-block;background:var(--red2);color:#fff;font-size:9px;font-family:var(--m);padding:1px 5px;border-radius:3px;margin-left:5px;vertical-align:middle}
+label{font-size:11px;letter-spacing:1px;text-transform:uppercase;color:var(--txt2);display:block;margin-bottom:5px;font-weight:600}
+label .req{color:var(--red);margin-left:3px;font-size:13px}
+input,select,textarea{background:var(--surf2);border:1px solid var(--b);color:var(--txt);font-family:var(--f);font-size:13px;padding:7px 11px;border-radius:6px;width:100%;outline:none;transition:border-color .15s}
+input:focus,select:focus,textarea:focus{border-color:var(--grn2)}
+textarea{resize:vertical;font-family:var(--m);font-size:11px;line-height:1.6}
+select option{background:var(--surf2)}
+.field-required.touched.invalid input,.field-required.touched.invalid textarea,.field-required.touched.invalid select{border-color:var(--red2);background:rgba(204,34,34,.06)}
+.field-required.touched.valid input,.field-required.touched.valid textarea,.field-required.touched.valid select{border-color:var(--grn2)}
+.field-err{font-size:10px;font-family:var(--m);color:var(--red);margin-top:4px;display:none}
+.field-required.touched.invalid .field-err{display:block}
+.char-count{font-size:10px;font-family:var(--m);color:var(--txt3);margin-top:3px;text-align:right}
+.char-count.ok{color:var(--grn2)}.char-count.warn{color:var(--amb)}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:6px;font-family:var(--f);font-size:12px;font-weight:600;letter-spacing:1px;text-transform:uppercase;cursor:pointer;border:none;transition:all .15s;white-space:nowrap}
+.btn-grn{background:var(--grn2);color:#fff}.btn-grn:hover{background:var(--grn);color:#000}
+.btn-blu{background:var(--blu2);color:#fff}.btn-blu:hover{background:var(--blu)}
+.btn-out{background:transparent;color:var(--txt2);border:1px solid var(--b2)}.btn-out:hover{border-color:var(--grn2);color:var(--grn)}
+.btn-red{background:var(--red2);color:#fff}.btn-red:hover{background:var(--red)}
+.btn-sm{padding:4px 10px;font-size:10px}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+.btn-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:.875rem}
+.card{background:var(--surf);border:1px solid var(--b);border-radius:8px;padding:1.125rem;margin-bottom:.875rem}
+.ctitle{font-size:12px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:var(--txt2);margin-bottom:.875rem;display:flex;align-items:center;gap:7px}
+.dot{width:6px;height:6px;border-radius:50%;background:var(--grn);flex-shrink:0}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:.875rem}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:.875rem}
+@media(max-width:900px){.g2,.g3{grid-template-columns:1fr 1fr}}
+@media(max-width:600px){.g2,.g3{grid-template-columns:1fr}}
+.tw{overflow-x:auto;border-radius:8px;border:1px solid var(--b)}
+table{width:100%;border-collapse:collapse;font-size:12px}
+th{background:var(--surf3);color:var(--txt2);font-size:10px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;padding:9px 11px;text-align:left;border-bottom:1px solid var(--b);white-space:nowrap;user-select:none}
+th.sortable{cursor:pointer}
+th.sortable:hover{color:var(--txt)}
+th.sort-asc::after{content:' \2191';color:var(--grn)}
+th.sort-desc::after{content:' \2193';color:var(--grn)}
+td{padding:8px 11px;border-bottom:1px solid var(--b);vertical-align:middle;font-family:var(--m);font-size:11px}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:var(--surf2)}
+tr.overdue-critical td{background:rgba(204,34,34,.08)}
+tr.overdue-warn td{background:rgba(245,166,35,.06)}
+.tag{display:inline-block;padding:2px 7px;border-radius:4px;font-size:10px;font-weight:600;letter-spacing:.5px;font-family:var(--f);text-transform:uppercase}
+.t-pass{background:var(--grn3);color:var(--grn);border:1px solid var(--grn2)}
+.t-fail{background:var(--red3);color:var(--red);border:1px solid var(--red2)}
+.t-pend{background:var(--amb3);color:var(--amb);border:1px solid var(--amb2)}
+.t-na{background:var(--surf3);color:var(--txt2);border:1px solid var(--b2)}
+.t-apr{background:var(--grn3);color:var(--grn);border:1px solid var(--grn2)}
+.t-deny{background:var(--red3);color:var(--red);border:1px solid var(--red2)}
+.t-rev{background:var(--pur3);color:var(--pur);border:1px solid var(--pur2)}
+.cat-tag{display:inline-block;padding:2px 7px;border-radius:4px;font-size:10px;font-weight:600;font-family:var(--f);text-transform:uppercase;letter-spacing:.5px;white-space:nowrap}
+.cat-aircraft{background:#0a1a30;color:#4a9eff;border:1px solid #1a6fd4}
+.cat-vehicle{background:#1a1000;color:#ff9500;border:1px solid #804a00}
+.cat-infantry{background:#0a2010;color:#39ff7a;border:1px solid #22b856}
+.cat-weapons{background:#2a0a0a;color:#ff4444;border:1px solid #cc2222}
+.cat-maps{background:#0a1a2a;color:#7f77dd;border:1px solid #534ab7}
+.cat-logistics{background:#0f2020;color:#1d9e75;border:1px solid #0f6e56}
+.cat-framework{background:#1e242d;color:#8a9ab0;border:1px solid #3a4558}
+.cat-other{background:#1e1a10;color:#f5a623;border:1px solid #c47d0e}
+.srv-tag{display:inline-block;padding:2px 6px;border-radius:3px;font-size:9px;font-weight:700;letter-spacing:.5px;font-family:var(--f);text-transform:uppercase;margin:1px}
+.srv-bsb{background:var(--blu3);color:var(--blu);border:1px solid var(--blu2)}
+.srv-505{background:var(--amb3);color:var(--amb);border:1px solid var(--amb2)}
+.srv-pub1{background:var(--pur3);color:var(--pur);border:1px solid var(--pur2)}
+.srv-pub2{background:var(--tea3);color:#1d9e75;border:1px solid var(--tea2)}
+.srv-pub3{background:#2a1a0a;color:#ff9500;border:1px solid #804a00}
+.srv-pub4{background:#1a0a2a;color:#cc44ff;border:1px solid #882299}
+.section-lbl{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--txt2);font-weight:600;padding:7px 11px;background:var(--surf3);border-bottom:1px solid var(--b)}
+.empty{text-align:center;padding:2.5rem;color:var(--txt3);font-family:var(--m);font-size:12px}
+.scrape-box{background:var(--surf2);border:1px solid var(--b2);border-radius:8px;padding:1.25rem;margin-bottom:1rem}
+.url-row{display:flex;gap:8px;align-items:flex-end}
+.url-row input{flex:1}
+.progress{height:4px;background:var(--surf3);border-radius:2px;overflow:hidden;margin-top:10px}
+.progress-fill{height:100%;background:var(--grn2);border-radius:2px;transition:width .4s;width:0}
+.fp-row{padding:4px 0;border-bottom:1px solid var(--b);display:flex;gap:8px;font-size:11px;font-family:var(--m)}
+.fp-key{color:var(--txt2);min-width:110px;flex-shrink:0}
+.fp-val{color:var(--txt);word-break:break-all}
+.fp-val.good{color:var(--grn)}
+.oic-stamp{display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border-radius:4px;font-size:10px;font-weight:700;letter-spacing:1px;font-family:var(--f);text-transform:uppercase;border:1px solid}
+.stamp-signed{background:var(--grn3);color:var(--grn);border-color:var(--grn2)}
+.stamp-pending{background:var(--amb3);color:var(--amb);border-color:var(--amb2)}
+.stamp-denied{background:var(--red3);color:var(--red);border-color:var(--red2)}
+.dep-pill{display:inline-block;background:var(--surf3);border:1px solid var(--b);border-radius:4px;padding:2px 7px;font-size:10px;font-family:var(--m);color:var(--txt2);margin:2px}
+.spinner{display:inline-block;width:13px;height:13px;border:2px solid var(--b2);border-top-color:var(--grn);border-radius:50%;animation:spin .7s linear infinite;vertical-align:middle;margin-right:6px}
+@keyframes spin{to{transform:rotate(360deg)}}
+.toast{position:fixed;bottom:1.5rem;right:1.5rem;background:var(--surf3);border:1px solid var(--grn2);color:var(--grn);font-size:12px;font-family:var(--m);padding:9px 16px;border-radius:6px;z-index:9999;opacity:0;transition:opacity .3s;pointer-events:none;max-width:320px}
+.toast.show{opacity:1}
+.toast.err{border-color:var(--red2);color:var(--red)}
+.toast.warn{border-color:var(--amb2);color:var(--amb)}
+.modal-bg{background:rgba(0,0,0,.75);display:flex;align-items:flex-start;justify-content:center;padding:2rem 1rem;min-height:600px}
+.modal{background:var(--surf);border:1px solid var(--b2);border-radius:10px;width:100%;max-width:800px;padding:1.5rem}
+.modal-hdr{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:1.25rem;padding-bottom:.875rem;border-bottom:1px solid var(--b);gap:12px}
+.dup-alert{border-radius:8px;border:2px solid var(--amb2);background:var(--amb3);padding:1rem 1.25rem;margin-bottom:1rem;display:none}
+.dup-alert.show{display:block}
+.dup-alert-title{font-size:13px;font-weight:700;color:var(--amb);letter-spacing:1px;text-transform:uppercase;margin-bottom:.5rem}
+.dup-alert-body{font-size:12px;font-family:var(--m);color:var(--txt2);line-height:1.8}
+.dup-alert-body span{color:var(--txt)}
+.dup-actions{display:flex;gap:8px;margin-top:.75rem;flex-wrap:wrap}
+.ver-alert{border-radius:8px;border:2px solid var(--pur2);background:var(--pur3);padding:1rem 1.25rem;margin-bottom:1rem;display:none}
+.ver-alert.show{display:block}
+.ver-alert-title{font-size:13px;font-weight:700;color:var(--pur);letter-spacing:1px;text-transform:uppercase;margin-bottom:.5rem}
+.ver-alert-body{font-size:12px;font-family:var(--m);color:var(--txt2);line-height:1.8}
+.overdue-banner{border-radius:8px;margin-bottom:1rem;overflow:hidden;display:none}
+.overdue-banner.show{display:block}
+.ob-critical{border:2px solid var(--red2)}.ob-warn{border:2px solid var(--amb2)}
+.ob-hdr{display:flex;align-items:center;justify-content:space-between;padding:.75rem 1rem;gap:12px;flex-wrap:wrap}
+.ob-hdr-crit{background:var(--red3)}.ob-hdr-warn{background:var(--amb3)}
+.ob-title{font-size:13px;font-weight:700;letter-spacing:1px;text-transform:uppercase;display:flex;align-items:center;gap:8px}
+.ob-count{font-size:22px;font-weight:700;font-family:var(--m)}
+.ob-body{background:var(--surf)}
+.ob-row{display:flex;justify-content:space-between;align-items:center;padding:9px 1rem;border-bottom:1px solid var(--b);gap:12px;flex-wrap:wrap;cursor:pointer;transition:background .1s}
+.ob-row:hover{background:var(--surf2)}.ob-row:last-child{border-bottom:none}
+.ob-mod-name{font-size:13px;font-weight:600;color:var(--txt);font-family:var(--f)}
+.ob-mod-meta{font-size:10px;font-family:var(--m);color:var(--txt2);margin-top:2px}
+.days-badge{display:inline-block;padding:3px 9px;border-radius:4px;font-size:11px;font-weight:700;font-family:var(--m);letter-spacing:1px}
+.days-crit{background:var(--red3);color:var(--red);border:1px solid var(--red2)}
+.days-warn{background:var(--amb3);color:var(--amb);border:1px solid var(--amb2)}
+.conn-banner{background:var(--surf2);border:1px solid var(--b);border-radius:8px;padding:.75rem 1rem;margin-bottom:1rem;display:flex;align-items:center;gap:12px;flex-wrap:wrap;font-size:12px;font-family:var(--m)}
+.conn-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+</style>
+</head>
+<body>
+<div class="app">
+
+<div class="hdr">
+  <div class="logo"><svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg></div>
+  <div><div class="htitle">Mod Testing Pipeline</div><div class="hsub">BSB/HQ &amp; 1-505th // Pub1 // Pub2 // Pub3 // Pub4</div></div>
+  <div class="hactions">
+    <span id="conn-status" style="font-size:11px;font-family:var(--m);color:var(--txt2);padding:4px 10px;background:var(--surf3);border:1px solid var(--b);border-radius:4px">&#9679; Connecting...</span>
+    <span id="db-count" style="font-size:11px;font-family:var(--m);color:var(--txt2);padding:4px 10px;background:var(--surf3);border:1px solid var(--b);border-radius:4px">0 mods</span>
+    <button class="btn btn-grn btn-sm" onclick="showTab('scrape')">+ Scrape URL</button>
+  </div>
+</div>
+
+<div class="stats">
+  <div class="stat"><div class="snum" id="s-total" style="color:var(--grn)">0</div><div class="slbl">Total</div></div>
+  <div class="stat"><div class="snum" id="s-pass" style="color:var(--grn)">0</div><div class="slbl">Passed</div></div>
+  <div class="stat"><div class="snum" id="s-fail" style="color:var(--red)">0</div><div class="slbl">Failed</div></div>
+  <div class="stat"><div class="snum" id="s-pend" style="color:var(--amb)">0</div><div class="slbl">Pending</div></div>
+  <div class="stat"><div class="snum" id="s-apr" style="color:var(--pur)">0</div><div class="slbl">Approved</div></div>
+  <div class="stat"><div class="snum" id="s-overdue" style="color:var(--red)">0</div><div class="slbl">OIC Overdue</div></div>
+  <div class="stat"><div class="snum" id="s-dup" style="color:var(--amb)">0</div><div class="slbl">Duplicates</div></div>
+</div>
+
+<div class="tabs">
+  <div class="tab active" onclick="showTab('scrape')">Scrape URL</div>
+  <div class="tab" onclick="showTab('dashboard')">Dashboard</div>
+  <div class="tab" onclick="showTab('list')">All Mods</div>
+  <div class="tab" onclick="showTab('servers')">Servers</div>
+  <div class="tab" onclick="showTab('review')">OIC Review <span class="tab-badge" id="review-badge" style="display:none">0</span></div>
+</div>
+
+<!-- SCRAPE TAB -->
+<div id="tab-scrape">
+  <div class="dup-alert" id="dup-alert">
+    <div class="dup-alert-title">&#9888; Mod Already Tested</div>
+    <div class="dup-alert-body" id="dup-alert-body"></div>
+    <div class="dup-actions">
+      <button class="btn btn-out btn-sm" id="dup-view-btn">View Existing</button>
+      <button class="btn btn-blu btn-sm" id="dup-retest-btn">Re-test (new version)</button>
+      <button class="btn btn-out btn-sm" onclick="dismissDup()">Dismiss</button>
+    </div>
+  </div>
+  <div class="ver-alert" id="ver-alert">
+    <div class="ver-alert-title">&#8593; New Version Detected</div>
+    <div class="ver-alert-body" id="ver-alert-body"></div>
+  </div>
+  <div class="scrape-box">
+    <div class="ctitle"><span class="dot" style="background:var(--blu)"></span>Workshop URL Scraper</div>
+    <div class="url-row">
+      <div style="flex:1">
+        <label>Arma Reforger Workshop URL</label>
+        <input type="text" id="scrape-url" placeholder="https://reforger.armaplatform.com/workshop/MODID-ModName" oninput="checkUrlRealtime(this.value)" onkeydown="if(event.key==='Enter')scrapeUrl()"/>
+      </div>
+      <button class="btn btn-blu" id="btn-scrape" onclick="scrapeUrl()" style="align-self:flex-end">Scrape</button>
+    </div>
+    <div class="progress"><div class="progress-fill" id="prog"></div></div>
+    <div id="scrape-status" style="margin-top:8px;font-family:var(--m);font-size:11px;color:var(--txt2)"></div>
+  </div>
+  <div id="scrape-result" style="display:none">
+    <div class="g2">
+      <div class="card">
+        <div class="ctitle"><span class="dot"></span>Scraped Data</div>
+        <div id="scraped-preview"></div>
+      </div>
+      <div class="card">
+        <div class="ctitle"><span class="dot" style="background:var(--amb)"></span>Test Details</div>
+        <div style="margin-bottom:.875rem;padding:.875rem;background:var(--surf3);border:1px solid var(--b2);border-radius:8px">
+          <label>Mod Category <span class="req">*</span></label>
+          <select id="f-cat" onchange="updateCatPreview()">
+            <option value="">&#8212; Select a category &#8212;</option>
+            <option value="Aircraft">Aircraft</option>
+            <option value="Ground Vehicle">Ground Vehicle</option>
+            <option value="Infantry/Gear">Infantry / Gear</option>
+            <option value="Weapons">Weapons</option>
+            <option value="Maps/Terrain">Maps / Terrain</option>
+            <option value="Logistics">Logistics / Support</option>
+            <option value="Framework">Framework / Admin</option>
+            <option value="Other">Other</option>
+          </select>
+          <div id="cat-preview" style="margin-top:8px;min-height:22px"></div>
+        </div>
+        <div class="g2" style="margin-bottom:.75rem">
+          <div><label>Test Result</label><select id="f-result"><option value="Pending">Pending</option><option value="Pass">Pass</option><option value="Fail">Fail</option><option value="N/A">N/A</option></select></div>
+          <div><label>Recommendation</label><select id="f-rec"><option value="Pending">Pending</option><option value="Approve">Approve</option><option value="Deny">Deny</option><option value="Needs Review">Needs Review</option></select></div>
+        </div>
+        <div class="g2" style="margin-bottom:.75rem">
+          <div><label>OIC Approval</label><select id="f-oic"><option value="Pending">Pending</option><option value="Signed">Signed</option><option value="Denied">Denied</option></select></div>
+          <div><label>OIC Name</label><input type="text" id="f-oicname" placeholder="e.g. CPT Smith"/></div>
+        </div>
+        <div class="g2" style="margin-bottom:.75rem">
+          <div class="field-required" id="fv-tester">
+            <label>Tested By <span class="req">*</span></label>
+            <input type="text" id="f-tester" placeholder="e.g. LT Borris" oninput="touchField('fv-tester','f-tester')" onblur="touchField('fv-tester','f-tester')"/>
+            <div class="field-err">Tester name is required</div>
+          </div>
+          <div class="field-required" id="fv-testdate">
+            <label>Date of Test <span class="req">*</span></label>
+            <input type="date" id="f-testdate" oninput="touchField('fv-testdate','f-testdate')" onblur="touchField('fv-testdate','f-testdate')"/>
+            <div class="field-err">Test date is required</div>
+          </div>
+        </div>
+        <div style="margin-bottom:.75rem"><label>Test Environment</label><input type="text" id="f-env" placeholder="e.g. S4 Server"/></div>
+        <div class="g2" style="margin-bottom:.75rem">
+          <div><label>Performance Impact</label><select id="f-perf"><option value="">Unknown</option><option value="None">None</option><option value="Low">Low</option><option value="Medium">Medium</option><option value="High">High</option><option value="Critical">Critical</option></select></div>
+          <div><label>FPS Impact</label><input type="text" id="f-fps" placeholder="e.g. -5 FPS avg"/></div>
+        </div>
+        <div style="margin-bottom:.75rem">
+          <label>Assign to Servers</label>
+          <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:6px">
+            <label style="display:flex;align-items:center;gap:5px;font-size:12px;letter-spacing:0;text-transform:none;color:var(--txt);cursor:pointer"><input type="checkbox" id="srv-bsb" style="width:auto"/><span class="srv-tag srv-bsb">BSB/HQ</span></label>
+            <label style="display:flex;align-items:center;gap:5px;font-size:12px;letter-spacing:0;text-transform:none;color:var(--txt);cursor:pointer"><input type="checkbox" id="srv-505" style="width:auto"/><span class="srv-tag srv-505">1-505th</span></label>
+            <label style="display:flex;align-items:center;gap:5px;font-size:12px;letter-spacing:0;text-transform:none;color:var(--txt);cursor:pointer"><input type="checkbox" id="srv-pub1" style="width:auto"/><span class="srv-tag srv-pub1">Pub1</span></label>
+            <label style="display:flex;align-items:center;gap:5px;font-size:12px;letter-spacing:0;text-transform:none;color:var(--txt);cursor:pointer"><input type="checkbox" id="srv-pub2" style="width:auto"/><span class="srv-tag srv-pub2">Pub2</span></label>
+            <label style="display:flex;align-items:center;gap:5px;font-size:12px;letter-spacing:0;text-transform:none;color:var(--txt);cursor:pointer"><input type="checkbox" id="srv-pub3" style="width:auto"/><span class="srv-tag srv-pub3">Pub3</span></label>
+            <label style="display:flex;align-items:center;gap:5px;font-size:12px;letter-spacing:0;text-transform:none;color:var(--txt);cursor:pointer"><input type="checkbox" id="srv-pub4" style="width:auto"/><span class="srv-tag srv-pub4">Pub4</span></label>
+          </div>
+        </div>
+        <div style="margin-bottom:.75rem"><label>Compatibility Issues</label><input type="text" id="f-compat" placeholder="e.g. Conflicts with WCS_Core"/></div>
+        <div style="margin-bottom:.75rem"><label>Issues Identified</label><textarea id="f-issues" rows="2" placeholder="Bugs, conflicts, problems..."></textarea></div>
+        <div style="margin-bottom:.875rem">
+          <div class="field-required" id="fv-notes" style="background:var(--surf2);border:1px solid var(--b2);border-radius:8px;padding:1rem">
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:.625rem">
+              <div id="notes-req-title" style="font-size:12px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--red)">Tester Notes</div>
+              <span id="notes-req-badge" style="background:var(--red3);color:var(--red);border:1px solid var(--red2);font-size:9px;font-family:var(--m);padding:2px 6px;border-radius:3px;letter-spacing:1px;text-transform:uppercase">Required</span>
+              <div id="notes-char-count" class="char-count" style="margin-left:auto">0 / 30 min</div>
+            </div>
+            <textarea id="f-notes" rows="5" placeholder="Required — describe test conditions, mod behaviour, observations, issues, and your overall assessment. Minimum 30 characters." oninput="onNotesInput()" onblur="touchField('fv-notes','f-notes')"></textarea>
+            <div class="field-err">Tester notes are required (minimum 30 characters)</div>
+          </div>
+        </div>
+        <div class="btn-row">
+          <button class="btn btn-grn" onclick="saveScraped()">Save to Database</button>
+          <button class="btn btn-out" onclick="discardScraped()">Discard</button>
+        </div>
+        <div id="save-status" style="margin-top:8px;font-family:var(--m);font-size:11px;color:var(--txt2)"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- DASHBOARD -->
+<div id="tab-dashboard" style="display:none">
+  <div id="overdue-banners"></div>
+  <div class="g2">
+    <div>
+      <div class="card"><div class="ctitle"><span class="dot" style="background:var(--red)"></span>Needs Attention</div><div id="dash-attn"></div></div>
+      <div class="card"><div class="ctitle"><span class="dot" style="background:var(--amb)"></span>Pending Test</div><div id="dash-pend"></div></div>
+    </div>
+    <div>
+      <div class="card"><div class="ctitle"><span class="dot"></span>Recently Added</div><div id="dash-recent"></div></div>
+      <div class="card"><div class="ctitle"><span class="dot" style="background:var(--pur)"></span>Approved &amp; Ready</div><div id="dash-apr"></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ALL MODS -->
+<div id="tab-list" style="display:none">
+  <div class="card" style="padding:.75rem;margin-bottom:.875rem">
+    <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+      <input type="text" id="search" placeholder="Search name or ID..." style="max-width:180px" oninput="renderList()"/>
+      <select id="fl-cat" style="max-width:150px" onchange="renderList()">
+        <option value="">All Categories</option>
+        <option>Aircraft</option><option>Ground Vehicle</option><option>Infantry/Gear</option>
+        <option>Weapons</option><option>Maps/Terrain</option><option>Logistics</option>
+        <option>Framework</option><option>Other</option>
+      </select>
+      <select id="fl-result" style="max-width:110px" onchange="renderList()"><option value="">All Results</option><option>Pass</option><option>Fail</option><option>Pending</option><option>N/A</option></select>
+      <select id="fl-rec" style="max-width:120px" onchange="renderList()"><option value="">All Recs</option><option>Approve</option><option>Deny</option><option>Pending</option><option>Needs Review</option></select>
+      <select id="fl-srv" style="max-width:110px" onchange="renderList()"><option value="">All Servers</option><option>BSB/HQ</option><option>1-505th</option><option>Pub1</option><option>Pub2</option><option>Pub3</option><option>Pub4</option></select>
+      <select id="fl-overdue" style="max-width:120px" onchange="renderList()"><option value="">All OIC</option><option value="overdue">Overdue 7d+</option><option value="critical">Critical 14d+</option></select>
+      <button class="btn btn-out btn-sm" onclick="exportCSV()">CSV</button>
+      <button class="btn btn-red btn-sm" onclick="clearAll()">Clear All</button>
+    </div>
+  </div>
+  <div class="tw">
+    <table id="mod-table">
+      <thead><tr>
+        <th class="sortable" onclick="sortBy('name')">Mod Name</th>
+        <th class="sortable" onclick="sortBy('cat')">Category</th>
+        <th class="sortable" onclick="sortBy('modid')">Mod ID</th>
+        <th class="sortable" onclick="sortBy('ver')">Ver</th>
+        <th class="sortable" onclick="sortBy('dev')">Developer</th>
+        <th>Servers</th>
+        <th class="sortable" onclick="sortBy('result')">Result</th>
+        <th class="sortable" onclick="sortBy('rec')">Rec</th>
+        <th class="sortable" onclick="sortBy('oic')">OIC</th>
+        <th class="sortable" onclick="sortBy('days')">Days Pending</th>
+        <th class="sortable" onclick="sortBy('tester')">Tester</th>
+        <th class="sortable" onclick="sortBy('testdate')">Test Date</th>
+        <th>Notes</th>
+        <th>Actions</th>
+      </tr></thead>
+      <tbody id="list-body"></tbody>
+    </table>
+  </div>
+  <div id="list-footer" style="margin-top:8px;font-family:var(--m);font-size:11px;color:var(--txt2)"></div>
+</div>
+
+<!-- SERVERS -->
+<div id="tab-servers" style="display:none">
+  <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:.875rem" id="server-grid"></div>
+</div>
+
+<!-- OIC REVIEW -->
+<div id="tab-review" style="display:none">
+  <div id="review-overdue-summary"></div>
+  <div id="review-list"></div>
+</div>
+
+<!-- MODAL -->
+<div id="modal-wrap" style="display:none">
+  <div class="modal-bg"><div class="modal">
+    <div class="modal-hdr">
+      <div style="flex:1;min-width:0">
+        <div style="font-size:16px;font-weight:700;letter-spacing:1px;color:var(--txt)" id="modal-name"></div>
+        <div style="font-size:11px;font-family:var(--m);color:var(--txt2);margin-top:3px" id="modal-meta"></div>
+      </div>
+      <button class="btn btn-out btn-sm" onclick="closeModal()">X Close</button>
+    </div>
+    <div id="modal-body"></div>
+  </div></div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+// ============================================================
+// CONFIGURATION — paste your Google Apps Script Web App URL below
+// ============================================================
+const SHEETS_API_URL = 'https://script.google.com/macros/s/AKfycbzUkKH94jGRGr6O6n-fKjxkt4eWkfpJVXjYqEKiw2zpGANCbBKLjrPZ7YOnwMvHLplSVQ/exec';
+// ============================================================
+
+const SK='arma-test-v7';
+const OIC_WARN=7,OIC_CRIT=14,NOTES_MIN=30;
+let mods=[],scraped=null,continueAnyway=false;
+let sortCol='testdate',sortDir=-1;
+const TODAY=new Date();TODAY.setHours(0,0,0,0);
+const SERVERS=['BSB/HQ','1-505th','Pub1','Pub2','Pub3','Pub4'];
+const SRV_CLASS={'BSB/HQ':'srv-bsb','1-505th':'srv-505','Pub1':'srv-pub1','Pub2':'srv-pub2','Pub3':'srv-pub3','Pub4':'srv-pub4'};
+const SRV_IDS={'BSB/HQ':'bsb','1-505th':'505','Pub1':'pub1','Pub2':'pub2','Pub3':'pub3','Pub4':'pub4'};
+const CAT_CLASS={'Aircraft':'cat-aircraft','Ground Vehicle':'cat-vehicle','Infantry/Gear':'cat-infantry','Weapons':'cat-weapons','Maps/Terrain':'cat-maps','Logistics':'cat-logistics','Framework':'cat-framework','Other':'cat-other'};
+
+// ── SHEETS API ──
+async function loadFromSheets(){
+  if(!SHEETS_API_URL||SHEETS_API_URL.includes('PASTE_YOUR')){
+    setConnStatus(false,'No API URL configured');
+    try{const r=await window.localStorage.getItem(SK);mods=r?JSON.parse(r):[];}catch(e){mods=[];}
+    updateAll(); return;
+  }
+  try{
+    const r=await fetch(SHEETS_API_URL+'?action=get');
+    const data=await r.json();
+    if(data.error)throw new Error(data.error);
+    mods=data.mods||[];
+    setConnStatus(true,'Sheets connected — '+mods.length+' mods');
+    updateAll();
+  }catch(e){
+    setConnStatus(false,'Connection failed — using local cache');
+    try{const r=localStorage.getItem(SK);mods=r?JSON.parse(r):[];}catch(e2){mods=[];}
+    updateAll();
+  }
+}
+
+async function saveToSheets(action,payload){
+  if(!SHEETS_API_URL||SHEETS_API_URL.includes('PASTE_YOUR')){
+    localStorage.setItem(SK,JSON.stringify(mods));return true;
+  }
+  try{
+    const r=await fetch(SHEETS_API_URL,{method:'POST',body:JSON.stringify({action,...payload}),headers:{'Content-Type':'application/json'}});
+    const data=await r.json();
+    if(data.error)throw new Error(data.error);
+    localStorage.setItem(SK,JSON.stringify(mods));
+    return true;
+  }catch(e){toast('Sheets save failed: '+e.message,true);return false;}
+}
+
+function setConnStatus(ok,msg){
+  const el=document.getElementById('conn-status');
+  el.textContent=(ok?'\u25CF ':' \u25CB ')+msg;
+  el.style.color=ok?'var(--grn)':'var(--amb)';
+  el.style.borderColor=ok?'var(--grn2)':'var(--amb2)';
+}
+
+function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,5);}
+function toast(msg,err=false,warn=false){const t=document.getElementById('toast');t.textContent=msg;t.className='toast show'+(err?' err':warn?' warn':'');clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('show'),4000);}
+
+function catTag(c){const cl=CAT_CLASS[c]||'cat-other';return c?`<span class="cat-tag ${cl}">${c}</span>`:'<span style="color:var(--txt3);font-size:10px">&#8212;</span>';}
+function updateCatPreview(){const c=document.getElementById('f-cat').value;document.getElementById('cat-preview').innerHTML=c?catTag(c):'<span style="font-size:11px;font-family:var(--m);color:var(--txt3)">No category selected</span>';}
+
+// ── VALIDATION ──
+function touchField(wid,iid){
+  const w=document.getElementById(wid),el=document.getElementById(iid);if(!w||!el)return;
+  w.classList.add('touched');
+  const ok=iid==='f-notes'?el.value.trim().length>=NOTES_MIN:el.value.trim().length>0;
+  w.classList.toggle('valid',ok);w.classList.toggle('invalid',!ok);
+}
+function onNotesInput(){
+  const val=document.getElementById('f-notes').value.trim(),n=val.length;
+  const cc=document.getElementById('notes-char-count');cc.textContent=n+' / '+NOTES_MIN+' min';cc.className='char-count'+(n>=NOTES_MIN?' ok':n>0?' warn':'');
+  const box=document.getElementById('fv-notes'),title=document.getElementById('notes-req-title'),badge=document.getElementById('notes-req-badge');
+  if(n>=NOTES_MIN){box.style.borderColor='var(--grn2)';title.style.color='var(--grn)';badge.style.cssText='background:var(--grn3);color:var(--grn);border:1px solid var(--grn2);font-size:9px;font-family:var(--m);padding:2px 6px;border-radius:3px;letter-spacing:1px;text-transform:uppercase';badge.textContent='Complete';}
+  else{box.style.borderColor=n>0?'var(--amb2)':'var(--b2)';title.style.color=n>0?'var(--amb)':'var(--red)';badge.style.cssText='background:var(--red3);color:var(--red);border:1px solid var(--red2);font-size:9px;font-family:var(--m);padding:2px 6px;border-radius:3px;letter-spacing:1px;text-transform:uppercase';badge.textContent='Required';}
+  touchField('fv-notes','f-notes');
+}
+function validateForm(){
+  let valid=true;
+  [{w:'fv-tester',i:'f-tester',min:1},{w:'fv-testdate',i:'f-testdate',min:1},{w:'fv-notes',i:'f-notes',min:NOTES_MIN}].forEach(({w,i,min})=>{
+    const el=document.getElementById(i),wr=document.getElementById(w);if(!el||!wr)return;
+    wr.classList.add('touched');const ok=el.value.trim().length>=min;wr.classList.toggle('valid',ok);wr.classList.toggle('invalid',!ok);if(!ok)valid=false;
+  });
+  if(!document.getElementById('f-cat').value){toast('Please select a category',false,true);valid=false;}
+  return valid;
+}
+
+// ── TAGS ──
+function resultTag(v){if(v==='Pass')return'<span class="tag t-pass">Pass</span>';if(v==='Fail')return'<span class="tag t-fail">Fail</span>';if(v==='N/A')return'<span class="tag t-na">N/A</span>';return'<span class="tag t-pend">Pending</span>';}
+function recTag(v){if(v==='Approve')return'<span class="tag t-apr">Approve</span>';if(v==='Deny')return'<span class="tag t-deny">Deny</span>';if(v==='Needs Review')return'<span class="tag t-rev">Review</span>';return'<span class="tag t-pend">Pending</span>';}
+function oicTag(v){if(v==='Signed')return'<span class="oic-stamp stamp-signed">Signed</span>';if(v==='Denied')return'<span class="oic-stamp stamp-denied">Denied</span>';return'<span class="oic-stamp stamp-pending">Pending</span>';}
+function srvTags(s){if(!s||!s.length)return'<span style="color:var(--txt3);font-size:10px">None</span>';return s.map(v=>`<span class="srv-tag ${SRV_CLASS[v]||''}">${v}</span>`).join('');}
+function perfColor(v){return{None:'var(--grn)',Low:'#8bc34a',Medium:'var(--amb)',High:'#ff7043',Critical:'var(--red)'}[v]||'var(--txt3)';}
+function daysPending(m){if(m.oic!=='Pending')return null;if(m.result==='Fail'||m.result==='Pending')return null;const ref=m.testdate||m.added;if(!ref)return null;const d=new Date(ref);d.setHours(0,0,0,0);return Math.floor((TODAY-d)/86400000);}
+function daysBadge(days){if(days===null||days<OIC_WARN)return'';return`<span class="days-badge ${days>=OIC_CRIT?'days-crit':'days-warn'}">${days}d overdue</span>`;}
+function overdueList(){return mods.map(m=>({m,days:daysPending(m)})).filter(({days})=>days!==null&&days>=OIC_WARN).sort((a,b)=>b.days-a.days);}
+
+// ── SORT ──
+function sortBy(col){if(sortCol===col)sortDir*=-1;else{sortCol=col;sortDir=1;}renderList();}
+function getSortVal(m,col){if(col==='days'){const d=daysPending(m);return d===null?-1:d;}return(m[col]||'').toString().toLowerCase();}
+function updateSortHeaders(){document.querySelectorAll('#mod-table th').forEach(th=>{th.classList.remove('sort-asc','sort-desc');const mt=th.getAttribute('onclick')?.match(/sortBy\('(\w+)'\)/);if(mt&&mt[1]===sortCol)th.classList.add(sortDir===1?'sort-asc':'sort-desc');});}
+
+// ── DUP DETECTION ──
+function extractId(url){const m=url.match(/([A-F0-9]{16})/i);return m?m[1].toUpperCase():null;}
+function similarity(a,b){const l=a.length>b.length?a:b,s=a.length>b.length?b:a;if(!l.length)return 1;let m=0;for(let i=0;i<s.length;i++)if(l.includes(s[i]))m++;return m/l.length;}
+function checkUrlRealtime(url){
+  const id=extractId(url);if(!id){hideDup();hideVer();return;}
+  const ex=mods.find(m=>m.modid&&m.modid.toUpperCase()===id);
+  if(ex)showDupAlert(ex);
+  else{hideDup();const sm=url.match(/[A-F0-9]{16}-(.+)$/i);if(sm){const slug=sm[1].replace(/-/g,' ').toLowerCase();const fz=mods.find(m=>m.name&&similarity(m.name.toLowerCase(),slug)>0.6);if(fz){document.getElementById('dup-alert-body').innerHTML=`<div style="color:var(--amb);margin-bottom:4px">Similar mod name detected.</div><div>Existing: <span>${fz.name}</span> (${fz.modid})</div><div>Category: <span>${fz.cat||'&#8212;'}</span></div>`;document.getElementById('dup-view-btn').onclick=()=>{openModal(fz._id);dismissDup();};document.getElementById('dup-retest-btn').textContent='Proceed Anyway';document.getElementById('dup-retest-btn').onclick=()=>{dismissDup();continueAnyway=true;};document.getElementById('dup-alert').classList.add('show');}}}
+}
+function showDupAlert(ex){
+  const days=daysPending(ex);
+  document.getElementById('dup-alert-body').innerHTML=`<div>Mod: <span>${ex.name}</span></div><div>Category: <span>${ex.cat||'&#8212;'}</span></div><div>Tested: <span>${ex.testdate||'unknown'}</span> by <span>${ex.tester||'unknown'}</span></div><div>Result: <span>${ex.result}</span> &#8212; Rec: <span>${ex.rec}</span> &#8212; OIC: <span>${ex.oic}</span></div>${days!==null&&days>=OIC_WARN?`<div style="margin-top:6px;color:var(--red)">OIC pending ${days} days</div>`:''}`;
+  document.getElementById('dup-view-btn').onclick=()=>{openModal(ex._id);dismissDup();};
+  document.getElementById('dup-retest-btn').textContent='Re-test (new version)';
+  document.getElementById('dup-retest-btn').onclick=()=>{dismissDup();continueAnyway=true;scrapeUrl();};
+  document.getElementById('dup-alert').classList.add('show');
+  document.getElementById('btn-scrape').disabled=true;
+}
+function hideDup(){document.getElementById('dup-alert').classList.remove('show');document.getElementById('btn-scrape').disabled=false;}
+function hideVer(){document.getElementById('ver-alert').classList.remove('show');}
+function dismissDup(){hideDup();hideVer();}
+
+// ── SCRAPER ──
+async function scrapeUrl(){
+  const rawUrl=document.getElementById('scrape-url').value.trim();
+  if(!rawUrl){toast('Enter a Workshop URL first',true);return;}
+  const modId=extractId(rawUrl);
+  if(modId&&!continueAnyway){const ex=mods.find(m=>m.modid&&m.modid.toUpperCase()===modId.toUpperCase());if(ex){showDupAlert(ex);toast('Already tested',false,true);return;}}
+  continueAnyway=false;hideDup();hideVer();
+  const btn=document.getElementById('btn-scrape');btn.disabled=true;btn.textContent='Scraping...';
+  setProgress(10);setScrapeStatus('<span class="spinner"></span>Connecting...');
+  const PROXIES=[u=>`https://api.allorigins.win/get?url=${encodeURIComponent(u)}`,u=>`https://corsproxy.io/?${encodeURIComponent(u)}`];
+  let html=null;
+  for(let i=0;i<PROXIES.length;i++){try{setScrapeStatus(`<span class="spinner"></span>Fetching via proxy ${i+1}...`);setProgress(20+i*15);const res=await fetch(PROXIES[i](rawUrl));if(!res.ok)throw new Error('HTTP '+res.status);const data=await res.json();html=data.contents||data;if(typeof html!=='string')throw new Error('Bad response');break;}catch(e){if(i===PROXIES.length-1){btn.disabled=false;btn.textContent='Scrape';setProgress(0);setScrapeStatus('Fetch failed.','err');toast('Scrape failed',true);return;}}}
+  setProgress(60);setScrapeStatus('<span class="spinner"></span>Parsing...');
+  const parser=new DOMParser();const doc=parser.parseFromString(html,'text/html');
+  function meta(p){const el=doc.querySelector(`meta[property="${p}"]`)||doc.querySelector(`meta[name="${p}"]`);return el?el.getAttribute('content'):'';}
+  function txt(s){const el=doc.querySelector(s);return el?el.textContent.trim():'';}
+  const allText=doc.body?doc.body.innerText||doc.body.textContent:html;
+  let name=txt('h1')||txt('.mod-title')||meta('og:title')||'';name=name.replace(/\s*-\s*Arma.*$/i,'').replace(/\s*\|\s*.*/,'').trim();
+  const extractedId=modId||'';
+  let version='';const verM=allText.match(/[Vv]ersion[:\s]+([0-9]+\.[0-9]+\.?[0-9]*)/);if(verM)version=verM[1];
+  let size='';const sizeM=allText.match(/([0-9]+(?:\.[0-9]+)?\s*(?:MB|GB|KB))/i);if(sizeM)size=sizeM[1];
+  let developer='';const devEl=doc.querySelector('[class*="author"],[class*="creator"],[class*="owner"]');if(devEl)developer=devEl.textContent.trim();if(!developer){const dm=allText.match(/(?:Author|Developer|Created by|By)[:\s]+([^\n,]{3,40})/i);if(dm)developer=dm[1].trim();}
+  let lastMod='';const dateEl=doc.querySelector('time');if(dateEl)lastMod=dateEl.getAttribute('datetime')||dateEl.textContent.trim();
+  let subscribers='';const subM=allText.match(/([0-9,]+)\s*(?:subscriber|download|follower)/i);if(subM)subscribers=subM[1];
+  const descEl=doc.querySelector('[class*="description"],[class*="desc"]');let description=descEl?descEl.textContent.trim().slice(0,300):meta('og:description').slice(0,300);
+  let deps=[];const depS=allText.match(/[Dd]ependenc(?:y|ies)[:\s\n]+([^\n]{10,2000})/);if(depS)deps=depS[1].split(/[,\n•\-]+/).map(d=>d.trim()).filter(d=>d.length>2&&d.length<60);
+  doc.querySelectorAll('a[href*="workshop"]').forEach(a=>{const t=a.textContent.trim();if(t.length>2&&t.length<60&&!deps.includes(t))deps.push(t);});
+  deps=[...new Set(deps)].filter(d=>d&&d!==name).slice(0,80);
+  if(!name)name=meta('og:title').replace(/\s*-\s*Arma.*$/i,'').trim();if(!name&&extractedId)name='Mod '+extractedId;
+  setProgress(90);
+  scraped={_id:uid(),name:name||'Unknown Mod',modid:extractedId,url:rawUrl,ver:version,dev:developer,size:size,lastmod:lastMod,subscribers:subscribers,description:description,deps:deps.join(', '),cat:'',result:'Pending',rec:'Pending',oic:'Pending',oicname:'',tester:'',testdate:'',env:'',perf:'',fps:'',compat:'',issues:'',notes:'',servers:[],added:new Date().toISOString().slice(0,10)};
+  if(extractedId&&version){const prev=mods.find(m=>m.modid&&m.modid.toUpperCase()===extractedId.toUpperCase());if(prev&&prev.ver&&prev.ver!==version){document.getElementById('ver-alert').classList.add('show');document.getElementById('ver-alert-body').innerHTML=`Previously: <span style="color:var(--txt)">${prev.ver}</span> &#8212; Workshop: <span style="color:var(--pur)">${version}</span>. Prior result: ${resultTag(prev.result)} ${recTag(prev.rec)}`;}}
+  setProgress(100);setScrapeStatus('Scraped successfully','ok');btn.disabled=false;btn.textContent='Scrape';
+  document.getElementById('scraped-preview').innerHTML=`<div>${[['Mod Name',scraped.name,true],['Mod ID',scraped.modid,true],['Version',scraped.ver||'&#8212;',false],['Developer',scraped.dev||'&#8212;',false],['Size',scraped.size||'&#8212;',false],['Last Modified',scraped.lastmod||'&#8212;',false],['Subscribers',scraped.subscribers||'&#8212;',false],['Dependencies',scraped.deps?scraped.deps.split(',').length+' found':'0',false]].map(([k,v,g])=>`<div class="fp-row"><span class="fp-key">${k}</span><span class="fp-val${g?' good':''}">${v}</span></div>`).join('')}</div>${scraped.deps?`<div style="margin-top:10px"><div style="font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--txt2);margin-bottom:5px">Dependencies</div><div>${scraped.deps.split(',').slice(0,15).map(d=>`<span class="dep-pill">${d.trim()}</span>`).join('')}${scraped.deps.split(',').length>15?`<span class="dep-pill">+${scraped.deps.split(',').length-15} more</span>`:''}</div></div>`:''}`;
+  document.getElementById('scrape-result').style.display='';
+  document.getElementById('f-testdate').value=new Date().toISOString().slice(0,10);
+  touchField('fv-testdate','f-testdate');
+  document.getElementById('f-cat').value='';updateCatPreview();
+  document.getElementById('f-notes').value='';onNotesInput();
+  ['fv-tester','fv-testdate','fv-notes'].forEach(id=>{const el=document.getElementById(id);if(el)el.classList.remove('touched','valid','invalid');});
+  setTimeout(()=>setProgress(0),1000);toast('Fetched: '+scraped.name);
+}
+function setProgress(p){document.getElementById('prog').style.width=p+'%';}
+function setScrapeStatus(msg,type=''){const el=document.getElementById('scrape-status');el.innerHTML=msg;el.style.color=type==='err'?'var(--red)':type==='ok'?'var(--grn)':'var(--txt2)';}
+function getSelectedServers(){return SERVERS.filter(s=>document.getElementById('srv-'+SRV_IDS[s])?.checked);}
+
+async function saveScraped(){
+  if(!scraped){toast('No scraped mod',true);return;}
+  if(!validateForm()){if(document.getElementById('f-notes').value.trim().length<NOTES_MIN){toast('Tester notes required &#8212; min 30 characters',false,true);document.getElementById('f-notes').focus();}else toast('Please fill in all required fields',false,true);return;}
+  scraped.cat=document.getElementById('f-cat').value;
+  scraped.result=document.getElementById('f-result').value;
+  scraped.rec=document.getElementById('f-rec').value;
+  scraped.oic=document.getElementById('f-oic').value;
+  scraped.oicname=document.getElementById('f-oicname').value.trim();
+  scraped.tester=document.getElementById('f-tester').value.trim();
+  scraped.testdate=document.getElementById('f-testdate').value;
+  scraped.env=document.getElementById('f-env').value.trim();
+  scraped.perf=document.getElementById('f-perf').value;
+  scraped.fps=document.getElementById('f-fps').value.trim();
+  scraped.compat=document.getElementById('f-compat').value.trim();
+  scraped.issues=document.getElementById('f-issues').value.trim();
+  scraped.notes=document.getElementById('f-notes').value.trim();
+  scraped.servers=getSelectedServers();
+  mods.unshift(scraped);
+  const ok=await saveToSheets('add',{mod:scraped});
+  if(ok){updateAll();discardScraped();toast('Saved: '+scraped.name);}
+  else mods.shift();
+}
+function discardScraped(){
+  scraped=null;continueAnyway=false;
+  document.getElementById('scrape-result').style.display='none';
+  document.getElementById('scrape-url').value='';setScrapeStatus('');hideDup();hideVer();
+  SERVERS.forEach(s=>{const el=document.getElementById('srv-'+SRV_IDS[s]);if(el)el.checked=false;});
+  ['f-result','f-rec','f-oic','f-perf'].forEach(i=>{const el=document.getElementById(i);if(el)el.selectedIndex=0;});
+  ['f-oicname','f-tester','f-env','f-fps','f-compat','f-issues'].forEach(i=>{const el=document.getElementById(i);if(el)el.value='';});
+  document.getElementById('f-testdate').value='';document.getElementById('f-cat').value='';updateCatPreview();
+  document.getElementById('f-notes').value='';onNotesInput();
+  ['fv-tester','fv-testdate','fv-notes'].forEach(id=>{const el=document.getElementById(id);if(el)el.classList.remove('touched','valid','invalid');});
+}
+async function deleteMod(id){
+  const m=mods.find(m=>m._id===id);if(!confirm('Remove "' + (m?m.name:id) + '"?'))return;
+  mods=mods.filter(m=>m._id!==id);
+  await saveToSheets('delete',{id});updateAll();closeModal();toast('Removed '+(m?m.name:''));
+}
+async function clearAll(){
+  if(!confirm('Clear ALL entries?'))return;
+  mods=[];await saveToSheets('clearAll',{});updateAll();toast('Cleared.');
+}
+async function quickOIC(id,status){
+  const i=mods.findIndex(m=>m._id===id);if(i<0)return;
+  mods[i].oic=status;
+  await saveToSheets('update',{mod:mods[i]});updateAll();toast('OIC: '+status);
+}
+
+// ── STATS ──
+function updateStats(){
+  document.getElementById('s-total').textContent=mods.length;
+  document.getElementById('s-pass').textContent=mods.filter(m=>m.result==='Pass').length;
+  document.getElementById('s-fail').textContent=mods.filter(m=>m.result==='Fail').length;
+  document.getElementById('s-pend').textContent=mods.filter(m=>m.result==='Pending').length;
+  document.getElementById('s-apr').textContent=mods.filter(m=>m.oic==='Signed').length;
+  document.getElementById('s-overdue').textContent=overdueList().length;
+  const ids=mods.map(m=>m.modid).filter(Boolean);document.getElementById('s-dup').textContent=ids.length-new Set(ids).size;
+  document.getElementById('db-count').textContent=mods.length+' mods';
+  const nr=mods.filter(m=>m.oic==='Pending'&&(m.result==='Pass'||m.rec==='Approve'||m.rec==='Needs Review')).length;
+  const b=document.getElementById('review-badge');b.textContent=nr;b.style.display=nr?'inline-block':'none';
+}
+
+// ── OVERDUE BANNERS ──
+function renderOverdueBanners(cid){
+  const c=document.getElementById(cid);if(!c)return;
+  const items=overdueList();const crit=items.filter(i=>i.days>=OIC_CRIT),warn=items.filter(i=>i.days>=OIC_WARN&&i.days<OIC_CRIT);
+  let html='';
+  if(crit.length)html+=`<div class="overdue-banner ob-critical show"><div class="ob-hdr ob-hdr-crit"><div class="ob-title" style="color:var(--red)">Critical &#8212; OIC overdue ${OIC_CRIT}+ days</div><div class="ob-count" style="color:var(--red)">${crit.length} mod${crit.length>1?'s':''}</div></div><div class="ob-body">${crit.map(({m,days})=>`<div class="ob-row" onclick="openModal('${m._id}')"><div><div class="ob-mod-name">${m.name} ${catTag(m.cat)}</div><div class="ob-mod-meta">${m.tester||'?'} &#8212; ${m.testdate||'?'}</div></div><div style="display:flex;gap:8px;align-items:center;flex-shrink:0"><span class="days-badge days-crit">${days}d</span><button class="btn btn-grn btn-sm" onclick="event.stopPropagation();quickOIC('${m._id}','Signed')">Sign</button><button class="btn btn-red btn-sm" onclick="event.stopPropagation();quickOIC('${m._id}','Denied')">Deny</button></div></div>`).join('')}</div></div>`;
+  if(warn.length)html+=`<div class="overdue-banner ob-warn show" style="margin-bottom:1rem"><div class="ob-hdr ob-hdr-warn"><div class="ob-title" style="color:var(--amb)">OIC pending ${OIC_WARN}+ days</div><div class="ob-count" style="color:var(--amb)">${warn.length} mod${warn.length>1?'s':''}</div></div><div class="ob-body">${warn.map(({m,days})=>`<div class="ob-row" onclick="openModal('${m._id}')"><div><div class="ob-mod-name">${m.name} ${catTag(m.cat)}</div><div class="ob-mod-meta">${m.tester||'?'} &#8212; ${m.testdate||'?'}</div></div><div style="display:flex;gap:8px;align-items:center;flex-shrink:0"><span class="days-badge days-warn">${days}d</span><button class="btn btn-grn btn-sm" onclick="event.stopPropagation();quickOIC('${m._id}','Signed')">Sign</button><button class="btn btn-red btn-sm" onclick="event.stopPropagation();quickOIC('${m._id}','Denied')">Deny</button></div></div>`).join('')}</div></div>`;
+  c.innerHTML=html;
+}
+
+// ── DASHBOARD ──
+function renderDashboard(){
+  renderOverdueBanners('overdue-banners');
+  const mkList=(arr,empty)=>!arr.length?`<div style="font-family:var(--m);font-size:11px;color:var(--txt3);padding:.5rem">${empty}</div>`:
+    arr.slice(0,5).map(m=>{const days=daysPending(m);return`<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid var(--b);gap:8px;cursor:pointer" onclick="openModal('${m._id}')"><div><div style="font-size:12px;font-weight:600;color:var(--txt);font-family:var(--f);display:flex;align-items:center;gap:6px">${m.name} ${catTag(m.cat)} ${days!==null&&days>=OIC_WARN?daysBadge(days):''}</div><div style="font-size:10px;font-family:var(--m);color:var(--txt2)">${m.modid||'&#8212;'}</div></div><div style="display:flex;gap:4px;flex-shrink:0">${resultTag(m.result)}${recTag(m.rec)}</div></div>`;}).join('');
+  document.getElementById('dash-attn').innerHTML=mkList(mods.filter(m=>m.result==='Fail'||m.rec==='Deny'),'No mods need attention');
+  document.getElementById('dash-pend').innerHTML=mkList(mods.filter(m=>m.result==='Pending'),'No pending tests');
+  document.getElementById('dash-recent').innerHTML=mkList(mods.slice(0,5),'No mods yet');
+  document.getElementById('dash-apr').innerHTML=mkList(mods.filter(m=>m.oic==='Signed'),'No approved mods yet');
+}
+
+// ── LIST ──
+function renderList(){
+  const s=(document.getElementById('search').value||'').toLowerCase();
+  const fc=document.getElementById('fl-cat').value,fr=document.getElementById('fl-result').value;
+  const frec=document.getElementById('fl-rec').value,fs=document.getElementById('fl-srv').value,fo=document.getElementById('fl-overdue').value;
+  let f=mods.filter(m=>{
+    if(s&&!m.name.toLowerCase().includes(s)&&!(m.modid||'').toLowerCase().includes(s))return false;
+    if(fc&&m.cat!==fc)return false;if(fr&&m.result!==fr)return false;if(frec&&m.rec!==frec)return false;
+    if(fs&&!(m.servers||[]).includes(fs))return false;
+    if(fo){const d=daysPending(m);if(fo==='overdue'&&(d===null||d<OIC_WARN))return false;if(fo==='critical'&&(d===null||d<OIC_CRIT))return false;}
+    return true;
+  });
+  f.sort((a,b)=>{let av=getSortVal(a,sortCol),bv=getSortVal(b,sortCol);if(typeof av==='number')return(av-bv)*sortDir;return av.localeCompare(bv)*sortDir;});
+  updateSortHeaders();
+  const body=document.getElementById('list-body');
+  if(!f.length){body.innerHTML='<tr><td colspan="14" class="empty">No mods found.</td></tr>';document.getElementById('list-footer').textContent='';return;}
+  body.innerHTML=f.map(m=>{
+    const days=daysPending(m);
+    const oc=days!==null&&days>=OIC_CRIT?'overdue-critical':days!==null&&days>=OIC_WARN?'overdue-warn':'';
+    return`<tr class="${oc}">
+      <td style="color:var(--txt);font-family:var(--f);font-weight:600;cursor:pointer;max-width:150px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" onclick="openModal('${m._id}')" title="${m.name}">${m.name}</td>
+      <td>${catTag(m.cat)}</td>
+      <td style="color:var(--txt2)">${(m.modid||'&#8212;').slice(0,14)}</td>
+      <td>${m.ver||'&#8212;'}</td>
+      <td style="max-width:90px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${m.dev||'&#8212;'}</td>
+      <td>${srvTags(m.servers)}</td>
+      <td>${resultTag(m.result)}</td>
+      <td>${recTag(m.rec)}</td>
+      <td>${oicTag(m.oic)}</td>
+      <td>${days!==null?daysBadge(days):'<span style="color:var(--txt3);font-size:10px">&#8212;</span>'}</td>
+      <td>${m.tester||'&#8212;'}</td>
+      <td>${m.testdate||'&#8212;'}</td>
+      <td style="max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--txt2)">${m.notes?m.notes.slice(0,40)+(m.notes.length>40?'&#8230;':''):'<span style="color:var(--red);font-size:10px">Missing</span>'}</td>
+      <td><button class="btn btn-red btn-sm" onclick="deleteMod('${m._id}')">Del</button></td>
+    </tr>`;
+  }).join('');
+  document.getElementById('list-footer').textContent=`${f.length} of ${mods.length} mods &#8212; click any column header to sort`;
+}
+
+// ── SERVERS ──
+function renderServers(){
+  document.getElementById('server-grid').innerHTML=SERVERS.map(srv=>{
+    const sm=mods.filter(m=>(m.servers||[]).includes(srv));
+    const pass=sm.filter(m=>m.result==='Pass').length,fail=sm.filter(m=>m.result==='Fail').length,apr=sm.filter(m=>m.oic==='Signed').length;
+    const byCat={};sm.forEach(m=>{const c=m.cat||'Other';if(!byCat[c])byCat[c]=0;byCat[c]++;});
+    return`<div class="card"><div class="ctitle"><span class="dot"></span><span class="srv-tag ${SRV_CLASS[srv]}">${srv}</span></div><div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px"><div class="stat"><div class="snum" style="font-size:18px;color:var(--txt)">${sm.length}</div><div class="slbl">Mods</div></div><div class="stat"><div class="snum" style="font-size:18px;color:var(--pur)">${apr}</div><div class="slbl">Approved</div></div><div class="stat"><div class="snum" style="font-size:18px;color:var(--grn)">${pass}</div><div class="slbl">Passed</div></div><div class="stat"><div class="snum" style="font-size:18px;color:var(--red)">${fail}</div><div class="slbl">Failed</div></div></div>${Object.keys(byCat).length?`<div style="margin-bottom:8px">${Object.entries(byCat).map(([c,n])=>`<span style="margin-right:4px">${catTag(c)}<span style="font-size:10px;font-family:var(--m);color:var(--txt2);margin-left:3px">${n}</span></span>`).join('')}</div>`:''} ${sm.slice(0,3).map(m=>{const d=daysPending(m);return`<div style="display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px solid var(--b);cursor:pointer" onclick="openModal('${m._id}')"><span style="font-family:var(--f);color:var(--txt);font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:110px;font-size:12px">${m.name}</span><div style="display:flex;gap:4px">${resultTag(m.result)}${d!==null&&d>=OIC_WARN?daysBadge(d):''}</div></div>`;}).join('')}${sm.length>3?`<div style="font-size:10px;font-family:var(--m);color:var(--txt3);margin-top:6px">+${sm.length-3} more</div>`:''}${!sm.length?'<div style="font-size:11px;font-family:var(--m);color:var(--txt3);padding:8px 0">No mods assigned</div>':''}</div>`;
+  }).join('');
+}
+
+// ── OIC REVIEW ──
+function renderReview(){
+  renderOverdueBanners('review-overdue-summary');
+  const needs=mods.filter(m=>m.oic==='Pending'&&(m.result==='Pass'||m.rec==='Approve'||m.rec==='Needs Review'));
+  const done=mods.filter(m=>m.oic!=='Pending');
+  let html='';
+  if(needs.length){
+    html+='<div class="section-lbl" style="color:var(--amb);border-radius:8px 8px 0 0">Awaiting OIC Signature ('+needs.length+')</div>';
+    html+=needs.map(m=>{const days=daysPending(m);return`<div class="card" style="border-radius:0;border-top:none;margin-bottom:0;border-bottom:1px solid var(--b)${days!==null&&days>=OIC_CRIT?';border-left:3px solid var(--red2)':days!==null&&days>=OIC_WARN?';border-left:3px solid var(--amb2)':''}"><div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;cursor:pointer" onclick="openModal('${m._id}')"><div><div style="font-size:14px;font-weight:700;color:var(--txt);display:flex;align-items:center;gap:8px;flex-wrap:wrap">${m.name} ${catTag(m.cat)} ${days!==null&&days>=OIC_WARN?daysBadge(days):''}</div><div style="font-size:10px;font-family:var(--m);color:var(--txt2);margin-top:2px">${m.modid||'&#8212;'} &#8212; ${m.tester||'?'} on ${m.testdate||'?'}</div><div style="margin-top:4px">${srvTags(m.servers)}</div></div><div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">${resultTag(m.result)}${recTag(m.rec)}${oicTag(m.oic)}<button class="btn btn-grn btn-sm" onclick="event.stopPropagation();quickOIC('${m._id}','Signed')">Sign</button><button class="btn btn-red btn-sm" onclick="event.stopPropagation();quickOIC('${m._id}','Denied')">Deny</button></div></div>${m.notes?`<div style="margin-top:8px;padding:8px 10px;background:var(--surf2);border-radius:5px;font-size:11px;font-family:var(--m);color:var(--txt2);border-left:2px solid var(--grn2)">Notes: ${m.notes.slice(0,150)}${m.notes.length>150?'&#8230;':''}</div>`:''}</div>`;}).join('');
+    html+='<div style="height:.875rem"></div>';
+  }
+  if(done.length)html+=`<div class="section-lbl" style="border-radius:8px 8px 0 0">Reviewed (${done.length})</div><div class="tw" style="border-radius:0 0 8px 8px"><table><thead><tr><th>Mod</th><th>Category</th><th>Servers</th><th>Result</th><th>Rec</th><th>OIC</th><th>Date</th></tr></thead><tbody>${done.map(m=>`<tr><td style="font-family:var(--f);font-weight:600;cursor:pointer" onclick="openModal('${m._id}')">${m.name}</td><td>${catTag(m.cat)}</td><td>${srvTags(m.servers)}</td><td>${resultTag(m.result)}</td><td>${recTag(m.rec)}</td><td>${oicTag(m.oic)}</td><td>${m.testdate||'&#8212;'}</td></tr>`).join('')}</tbody></table></div>`;
+  if(!html)html='<div class="empty">No mods awaiting OIC review.</div>';
+  document.getElementById('review-list').innerHTML=html;
+}
+
+// ── MODAL ──
+function openModal(id){
+  const m=mods.find(m=>m._id===id);if(!m)return;
+  const days=daysPending(m);
+  document.getElementById('modal-name').textContent=m.name;
+  document.getElementById('modal-meta').textContent=[m.modid,m.ver?'v'+m.ver:'',m.dev].filter(Boolean).join(' &#8212; ');
+  document.getElementById('modal-body').innerHTML=`
+    <div style="display:flex;gap:8px;align-items:center;margin-bottom:.875rem;flex-wrap:wrap">${catTag(m.cat)} ${srvTags(m.servers)} ${days!==null&&days>=OIC_WARN?daysBadge(days):''}</div>
+    ${days!==null&&days>=OIC_CRIT?`<div style="margin-bottom:.875rem;padding:10px 12px;background:var(--red3);border:1px solid var(--red2);border-radius:6px;font-size:12px;font-family:var(--m);color:var(--red)">OIC approval pending ${days} days &#8212; immediate action required</div>`:''}
+    ${days!==null&&days>=OIC_WARN&&days<OIC_CRIT?`<div style="margin-bottom:.875rem;padding:10px 12px;background:var(--amb3);border:1px solid var(--amb2);border-radius:6px;font-size:12px;font-family:var(--m);color:var(--amb)">OIC approval pending ${days} days</div>`:''}
+    <div class="g2" style="margin-bottom:.875rem">
+      <div><div class="section-lbl" style="border-radius:6px 6px 0 0">Test Outcome</div>
+        <div style="padding:12px;background:var(--surf2);border:1px solid var(--b);border-top:none;border-radius:0 0 6px 6px;font-size:11px;font-family:var(--m);color:var(--txt2);line-height:2">
+          <div style="display:flex;gap:8px;margin-bottom:8px;flex-wrap:wrap">${resultTag(m.result)}${recTag(m.rec)}${oicTag(m.oic)}</div>
+          <div>Tester: <span style="color:var(--txt)">${m.tester||'&#8212;'}</span></div>
+          <div>Date: <span style="color:var(--txt)">${m.testdate||'&#8212;'}</span></div>
+          <div>Environment: <span style="color:var(--txt)">${m.env||'&#8212;'}</span></div>
+          <div>OIC: <span style="color:var(--txt)">${m.oicname||'&#8212;'}</span></div>
+        </div>
+      </div>
+      <div><div class="section-lbl" style="border-radius:6px 6px 0 0">Mod Info</div>
+        <div style="padding:12px;background:var(--surf2);border:1px solid var(--b);border-top:none;border-radius:0 0 6px 6px;font-size:11px;font-family:var(--m);color:var(--txt2);line-height:2">
+          <div>Category: <span style="color:var(--txt)">${m.cat||'&#8212;'}</span></div>
+          <div>Size: <span style="color:var(--txt)">${m.size||'&#8212;'}</span></div>
+          <div>Developer: <span style="color:var(--txt)">${m.dev||'&#8212;'}</span></div>
+          <div>Last Modified: <span style="color:var(--txt)">${m.lastmod||'&#8212;'}</span></div>
+          <div>Performance: <span style="color:${perfColor(m.perf)}">${m.perf||'Unknown'}</span></div>
+        </div>
+      </div>
+    </div>
+    <div style="margin-bottom:.875rem"><div class="section-lbl" style="border-radius:6px 6px 0 0;color:var(--grn)">Tester Notes</div>
+      <div style="padding:12px;background:var(--surf2);border:1px solid var(--grn2);border-top:none;border-radius:0 0 6px 6px;font-size:12px;font-family:var(--m);color:var(--txt);line-height:1.8;white-space:pre-wrap">${m.notes||'<span style="color:var(--red)">No notes recorded</span>'}</div>
+    </div>
+    ${m.issues?`<div style="margin-bottom:.75rem;padding:10px 12px;background:var(--red3);border:1px solid var(--red2);border-radius:6px;font-size:11px;font-family:var(--m);color:var(--red)">Issues: ${m.issues}</div>`:''}
+    ${m.compat?`<div style="margin-bottom:.75rem;padding:10px 12px;background:var(--amb3);border:1px solid var(--amb2);border-radius:6px;font-size:11px;font-family:var(--m);color:var(--amb)">Compatibility: ${m.compat}</div>`:''}
+    ${m.deps?`<div style="margin-bottom:.75rem"><div class="section-lbl" style="border-radius:6px 6px 0 0">Dependencies (${m.deps.split(',').filter(d=>d.trim()).length})</div><div style="padding:10px 12px;background:var(--surf2);border:1px solid var(--b);border-top:none;border-radius:0 0 6px 6px">${m.deps.split(',').map(d=>`<span class="dep-pill">${d.trim()}</span>`).join('')}</div></div>`:''}
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      ${m.oic==='Pending'?`<button class="btn btn-grn btn-sm" onclick="quickOIC('${m._id}','Signed');closeModal()">OIC Sign</button>`:''}
+      ${m.oic==='Pending'?`<button class="btn btn-red btn-sm" onclick="quickOIC('${m._id}','Denied');closeModal()">OIC Deny</button>`:''}
+      ${m.url?`<a href="${m.url}" target="_blank" class="btn btn-out btn-sm">Workshop</a>`:''}
+      <button class="btn btn-red btn-sm" onclick="deleteMod('${m._id}')">Delete</button>
+    </div>`;
+  document.getElementById('modal-wrap').style.display='block';
+}
+function closeModal(){document.getElementById('modal-wrap').style.display='none';}
+
+function exportCSV(){
+  const h=['Name','Category','Mod ID','Version','Developer','Size','Servers','Result','Recommendation','OIC','Days Pending','Tester','Test Date','Tester Notes','Perf','FPS','Compat','Issues','Deps','Added'];
+  const rows=mods.map(m=>[m.name,m.cat,m.modid,m.ver,m.dev,m.size,(m.servers||[]).join(';'),m.result,m.rec,m.oic,daysPending(m)??'',m.tester,m.testdate,m.notes,m.perf,m.fps,m.compat,m.issues,m.deps,m.added]);
+  const csv=[h,...rows].map(r=>r.map(v=>`"${String(v||'').replace(/"/g,'""')}"`).join(',')).join('\n');
+  const a=document.createElement('a');a.href='data:text/csv;charset=utf-8,'+encodeURIComponent(csv);a.download='arma-mod-tests-'+new Date().toISOString().slice(0,10)+'.csv';a.click();toast('Exported '+mods.length+' mods');
+}
+
+function showTab(name){
+  ['scrape','dashboard','list','servers','review'].forEach(t=>{document.getElementById('tab-'+t).style.display=t===name?'':'none';});
+  document.querySelectorAll('.tab').forEach((t,i)=>{t.classList.toggle('active',['scrape','dashboard','list','servers','review'][i]===name);});
+  updateAll();
+}
+function updateAll(){updateStats();renderDashboard();renderList();renderServers();renderReview();}
+
+// Auto-refresh every 60s
+setInterval(loadFromSheets,60000);
+loadFromSheets();
+</script>
+</body>
+</html>
